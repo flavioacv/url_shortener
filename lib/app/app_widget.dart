@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:url_shortener/app/core/routes/routes.dart';
 import 'package:url_shortener/app/core/themes/theme_data.dart';
 
@@ -17,6 +18,11 @@ class _AppWidgetState extends State<AppWidget> {
       theme: themeData,
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [Locale('pt', 'BR')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
       debugShowCheckedModeBanner: false,
       onGenerateRoute: Routes.generateRoute,
       initialRoute: Routes.splashRoute,
