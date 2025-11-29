@@ -9,15 +9,17 @@ class ShortenerController extends ValueNotifier<ShortenerState> with EmitMixin {
     : super(ShortenerState.initial());
 
   Future<void> shortUrl(String url) async {
+    final currentHistory = value.history;
     emit(ShortenerState.loading());
     final result = await shortenerService.shortUrl(url);
     result.fold(
       onLeft: (exception) => emit(ShortenerState.error(exception: exception)),
-      onRight: (shortenedUrl){
-        final history = value.history;
-        history.add(shortenedUrl);
-        emit(ShortenerState.success(shortenedUrl: shortenedUrl, history: history));
-      }
+      onRight: (shortenedUrl) {
+        final history = [...currentHistory, shortenedUrl];
+        emit(
+          ShortenerState.success(shortenedUrl: shortenedUrl, history: history),
+        );
+      },
     );
   }
 }
