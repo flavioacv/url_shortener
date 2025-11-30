@@ -41,6 +41,8 @@ final themeData = ThemeData(
       red50: Color(0xFFFEF2F2), // Error message background
       red200: Color(0xFFFECACA), // Error message border
       red800: Color(0xFF991B1B), // Error message text
+
+      black: Color(0xFF000000),
     ),
   ],
 );

@@ -33,6 +33,8 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color red200;
   final Color red800;
 
+  final Color black;
+
   const AppColors({
     // Purple
     required this.purple600,
@@ -62,7 +64,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.red50,
     required this.red200,
     required this.red800,
-  });
+    required this.black,
+    });
 
   @override
   AppColors copyWith({
@@ -94,6 +97,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? red50,
     Color? red200,
     Color? red800,
+    Color? black,
   }) {
     return AppColors(
       // Purple
@@ -124,6 +128,7 @@ class AppColors extends ThemeExtension<AppColors> {
       red50: red50 ?? this.red50,
       red200: red200 ?? this.red200,
       red800: red800 ?? this.red800,
+      black: black ?? this.black,
     );
   }
 
@@ -158,6 +163,7 @@ class AppColors extends ThemeExtension<AppColors> {
       red50: Color.lerp(red50, other?.red50, t) ?? red50,
       red200: Color.lerp(red200, other?.red200, t) ?? red200,
       red800: Color.lerp(red800, other?.red800, t) ?? red800,
+      black: Color.lerp(black, other?.black, t) ?? black,
     );
   }
 }
