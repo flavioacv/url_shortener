@@ -24,23 +24,17 @@ void main() {
       expect(controller.value, isA<ShortenerStateInitial>());
     });
     test('should emit loading state', () {
-      controller.value = ShortenerState.loading();
+      controller.value = controller.value.loading();
       expect(controller.value, isA<ShortenerStateLoading>());
     });
 
     test('should emit success state', () {
-      controller.value = ShortenerState.success(
-        shortenedUrl: ShortenedUrlModel(
-          alias: '',
-          links: UrlLinksModel.empty(),
-        ),
-        history: [],
-      );
+      controller.value = controller.value.success(history: []);
       expect(controller.value, isA<ShortenerStateSuccess>());
     });
 
     test('should emit error state', () {
-      controller.value = ShortenerState.error(
+      controller.value = controller.value.error(
         exception: HttpException('error'),
       );
       expect(controller.value, isA<ShortenerStateError>());
@@ -60,7 +54,6 @@ void main() {
 
         final successState = controller.value as ShortenerStateSuccess;
         expect(successState.history, [fakeModel]);
-        expect(successState.shortenedUrl, fakeModel);
       });
 
       test('should emit loading then error on failure', () async {

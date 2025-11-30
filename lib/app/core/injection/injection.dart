@@ -5,13 +5,14 @@ import 'package:url_shortener/app/core/service/http_service/dio/http_client_dio_
 import 'package:url_shortener/app/core/service/http_service/http_client_service.dart';
 import 'package:url_shortener/app/core/service/internet_connection/internet_connection_service.dart';
 import 'package:url_shortener/app/core/service/internet_connection/internet_connection_service_impl.dart';
+import 'package:url_shortener/app/modules/home/home_module.dart';
 
 final getIt = GetIt.instance;
 
 class Injection {
   static Future<void> init() async {
     await _services();
-    // await LoginModule.binds(getIt);
+    await HomeModule.binds(getIt);
   }
 
   static Future<void> _services() async {

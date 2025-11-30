@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_shortener/app/modules/home/ui/pages/home_page.dart';
+import 'package:url_shortener/app/modules/home/home_module.dart';
 import 'package:url_shortener/app/modules/splash/pages/splash_page.dart';
 
 class Routes {
@@ -13,7 +13,7 @@ class Routes {
       case splashRoute:
         return MaterialPageRoute(builder: (_) => const SplashPage());
       case homeRoute:
-        return MaterialPageRoute(builder: (_) => const HomePage());
+        return HomeModule.routes(settings);
       default:
         return null;
     }

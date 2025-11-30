@@ -1,56 +1,53 @@
 import 'package:dio/dio.dart';
 
-/// Utilitário para mapear exceções do Dio em mensagens amigáveis ao usuário
 class DioExceptionHandler {
-  /// Retorna uma mensagem amigável baseada no tipo de exceção e status code
   static String getDefaultMessage(DioException exception) {
     switch (exception.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Tempo de conexão esgotado. Verifique sua internet.';
+        return 'Connection timeout. Please check your internet connection.';
 
       case DioExceptionType.sendTimeout:
-        return 'Tempo esgotado ao enviar dados para o servidor.';
+        return 'Timeout while sending data to the server.';
 
       case DioExceptionType.receiveTimeout:
-        return 'Tempo esgotado ao receber dados do servidor.';
+        return 'Timeout while receiving data from the server.';
 
       case DioExceptionType.badCertificate:
-        return 'Certificado SSL inválido.';
+        return 'Invalid SSL certificate.';
 
       case DioExceptionType.badResponse:
         return _getMessageByStatusCode(exception.response?.statusCode);
 
       case DioExceptionType.cancel:
-        return 'Requisição cancelada.';
+        return 'Request cancelled.';
 
       case DioExceptionType.connectionError:
-        return 'Erro de conexão. Verifique sua rede.';
+        return 'Connection error. Please check your network.';
 
       case DioExceptionType.unknown:
-        return 'Erro inesperado. Verifique sua conexão ou tente novamente mais tarde.';
+        return 'Unexpected error. Check your connection or try again later.';
     }
   }
 
-  /// Retorna mensagem específica baseada no status code HTTP
   static String _getMessageByStatusCode(int? statusCode) {
     switch (statusCode) {
       case 400:
-        return 'Requisição inválida. Verifique os dados enviados.';
+        return 'Invalid request. Please check the data sent.';
 
       case 401:
-        return 'Acesso não autorizado. Faça login novamente.';
+        return 'Unauthorized access. Please login again.';
 
       case 403:
-        return 'Você não tem permissão para acessar este recurso.';
+        return 'You do not have permission to access this resource.';
 
       case 404:
-        return 'Recurso não encontrado. Verifique a URL.';
+        return 'Resource not found. Please check the URL.';
 
       case 500:
-        return 'Erro interno do servidor. Tente novamente mais tarde.';
+        return 'Internal server error. Please try again later.';
 
       default:
-        return 'Erro desconhecido na resposta do servidor.';
+        return 'Unknown error in server response.';
     }
   }
 }

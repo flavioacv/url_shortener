@@ -4,21 +4,20 @@ import 'package:url_shortener/app/modules/home/interactor/services/shortener_ser
 import 'package:url_shortener/app/modules/home/interactor/states/shortener_state.dart';
 
 class ShortenerController extends ValueNotifier<ShortenerState> with EmitMixin {
-  final ShortenerService shortenerService;
-  ShortenerController({required this.shortenerService})
-    : super(ShortenerState.initial());
+  final ShortenerService _shortenerService;
+  ShortenerController({required ShortenerService shortenerService})
+    : _shortenerService = shortenerService,
+      super(ShortenerState.initial());
 
   Future<void> shortUrl(String url) async {
-    final currentHistory = value.history;
-    emit(ShortenerState.loading());
-    final result = await shortenerService.shortUrl(url);
+    emit(value.loading());
+    final result = await _shortenerService.shortUrl(url);
+
     result.fold(
-      onLeft: (exception) => emit(ShortenerState.error(exception: exception)),
+      onLeft: (exception) => emit(value.error(exception: exception)),
       onRight: (shortenedUrl) {
-        final history = [...currentHistory, shortenedUrl];
-        emit(
-          ShortenerState.success(shortenedUrl: shortenedUrl, history: history),
-        );
+        final updatedHistory = [...value.history, shortenedUrl];
+        emit(value.success(history: updatedHistory));
       },
     );
   }
