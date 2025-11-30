@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_shortener/app/core/themes/extensions/theme_extension.dart';
 import 'package:url_shortener/app/modules/home/interactor/controllers/shortener_controller.dart';
+import 'package:url_shortener/app/modules/home/interactor/states/shortener_state.dart';
 import 'package:url_shortener/app/modules/home/ui/widgets/empty_list_widget.dart';
 import 'package:url_shortener/app/modules/home/ui/widgets/feedback_message_widget.dart';
 import 'package:url_shortener/app/modules/home/ui/widgets/link_card_widget.dart';
@@ -21,56 +22,72 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _urlController = TextEditingController();
   final ValueNotifier<bool> _showSuccess = ValueNotifier(false);
   final ValueNotifier<bool> _showError = ValueNotifier(false);
-
-  // List of shortened links (empty by default to show empty state)
-  final List<Map<String, String>> _links = [
-    // Uncomment to see links:
-    {
-      'originalUrl':
-          'https://www.example.com/very/long/url/path/to/some/content',
-      'shortenedUrl': 'https://short.url/abc123',
-      'alias': 'abc123',
-    },
-    {
-      'originalUrl': 'https://www.github.com/nubank/mobile-test',
-      'shortenedUrl': 'https://short.url/xyz789',
-      'alias': 'xyz789',
-    },
-  ];
+  final ValueNotifier<String?> _urlValidationError = ValueNotifier(null);
 
   @override
   void initState() {
     super.initState();
-    _listenable = Listenable.merge([widget.controller, _showSuccess, _showError]);
+
+    widget.controller.addListener(shortenerListener);
+    _urlController.addListener(_validateUrl);
+
+    _listenable = Listenable.merge([
+      widget.controller,
+      _showSuccess,
+      _showError,
+      _urlValidationError,
+    ]);
   }
 
-  @override
-  void dispose() {
-    _urlController.dispose();
-    super.dispose();
-  }
-
-  void _shortenUrl() {
-    if (_urlController.text.isNotEmpty) {
-      // Simulate API call - you can change this logic
-      // For demo: show error if URL doesn't start with http
-      final isValidUrl = _urlController.text.startsWith('http');
-
-      setState(() {
-        _showSuccess.value = isValidUrl;
-        _showError.value = !isValidUrl;
-      });
-
-      // Hide message after 3 seconds
+  void shortenerListener() {
+    final shortenerState = widget.controller.value;
+    if (shortenerState is ShortenerStateError) {
+      _showError.value = true;
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
-            _showSuccess.value = false;
             _showError.value = false;
           });
         }
       });
     }
+    if (shortenerState is ShortenerStateSuccess) {
+      _showSuccess.value = true;
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _showSuccess.value = false;
+          });
+        }
+      });
+    }
+  }
+
+  void _validateUrl() {
+    final url = _urlController.text.trim();
+
+    if (url.isEmpty || url.length < 4) {
+      _urlValidationError.value = null;
+      return;
+    }
+
+    if (!widget.controller.isValidUrl(url)) {
+      _urlValidationError.value =
+          'Please enter a valid URL(https://example.com)';
+    } else {
+      _urlValidationError.value = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _urlController.removeListener(_validateUrl);
+    _urlController.dispose();
+    widget.controller.removeListener(shortenerListener);
+    _showSuccess.dispose();
+    _showError.dispose();
+    _urlValidationError.dispose();
+    super.dispose();
   }
 
   @override
@@ -82,10 +99,13 @@ class _HomePageState extends State<HomePage> {
       body: ListenableBuilder(
         listenable: _listenable,
         builder: (context, child) {
+          final state = widget.controller.value;
           return SafeArea(
             child: SingleChildScrollView(
               child: Container(
-                constraints: BoxConstraints(minHeight: context.screenSize.height),
+                constraints: BoxConstraints(
+                  minHeight: context.screenSize.height,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -137,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const SizedBox(height: 32),
-          
+
                     // Input Card
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -146,7 +166,9 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: context.appColors.black.withValues(alpha: 0.05),
+                            color: context.appColors.black.withValues(
+                              alpha: 0.05,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -165,8 +187,14 @@ class _HomePageState extends State<HomePage> {
                               ),
                               prefixIcon: Icon(
                                 LucideIcons.link,
-                                color: context.appColors.gray400,
+                                color: _urlValidationError.value != null
+                                    ? context.appColors.red500
+                                    : context.appColors.gray400,
                                 size: 20,
+                              ),
+                              errorText: _urlValidationError.value,
+                              errorStyle: context.size12.copyWith(
+                                color: context.appColors.red500,
                               ),
                               filled: true,
                               fillColor: context.appColors.white,
@@ -179,13 +207,30 @@ class _HomePageState extends State<HomePage> {
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: context.appColors.gray300,
+                                  color: _urlValidationError.value != null
+                                      ? context.appColors.red500
+                                      : context.appColors.gray300,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: context.appColors.purple600,
+                                  color: _urlValidationError.value != null
+                                      ? context.appColors.red500
+                                      : context.appColors.purple600,
+                                  width: 2,
+                                ),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: context.appColors.red500,
+                                ),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: context.appColors.red500,
                                   width: 2,
                                 ),
                               ),
@@ -196,30 +241,49 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           const SizedBox(height: 16),
-          
+
                           // Shorten Button
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _shortenUrl,
+                              onPressed:
+                                  (_urlController.text.trim().isEmpty ||
+                                      _urlController.text.length < 4 ||
+                                      _urlValidationError.value != null)
+                                  ? null
+                                  : () {
+                                      final url = _urlController.text.trim();
+                                      widget.controller.shortUrlTest(url);
+                                    },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: context.appColors.purple600,
                                 foregroundColor: context.appColors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 elevation: 0,
                               ),
-                              child: Text(
-                                'Shorten URL',
-                                style: context.size16.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              child: state is ShortenerStateLoading
+                                  ? SizedBox(
+                                      width: 23,
+                                      height: 23,
+                                      child: CircularProgressIndicator(
+                                        color: context.appColors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Shorten URL',
+                                      style: context.size16.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ),
                           ),
-          
+
                           if (_showSuccess.value) ...[
                             const SizedBox(height: 16),
                             FeedbackMessageWidget(
@@ -232,12 +296,13 @@ class _HomePageState extends State<HomePage> {
                               },
                             ),
                           ],
-          
+
                           if (_showError.value) ...[
                             const SizedBox(height: 16),
                             FeedbackMessageWidget(
                               type: FeedbackType.error,
-                              message: 'Failed to fetch',
+                              message:
+                                  state.exception?.message ?? 'Failed to fetch',
                               onClose: () {
                                 setState(() {
                                   _showError.value = false;
@@ -249,7 +314,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-          
+
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -258,7 +323,9 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: context.appColors.black.withValues(alpha: 0.05),
+                            color: context.appColors.black.withValues(
+                              alpha: 0.05,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -268,7 +335,7 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Recent Links (${_links.length})',
+                            'Recent Links (${state.history.length})',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -276,20 +343,20 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           const SizedBox(height: 16),
-          
-                          if (_links.isEmpty)
+
+                          if (state.history.isEmpty)
                             EmptyListWidget()
                           else
-                            ..._links.asMap().entries.map((entry) {
+                            ...state.history.asMap().entries.map((entry) {
                               final index = entry.key;
-                              final link = entry.value;
+                              final item = entry.value;
                               return Column(
                                 children: [
                                   if (index > 0) const SizedBox(height: 16),
                                   LinkCardWidget(
-                                    originalUrl: link['originalUrl']!,
-                                    shortenedUrl: link['shortenedUrl']!,
-                                    alias: link['alias']!,
+                                    originalUrl: item.links?.self ?? '',
+                                    shortenedUrl: item.links?.short ?? '',
+                                    alias: item.alias ?? '',
                                   ),
                                 ],
                               );
@@ -302,7 +369,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
