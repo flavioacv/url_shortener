@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _urlController = TextEditingController();
   final ValueNotifier<bool> _showSuccess = ValueNotifier(false);
   final ValueNotifier<bool> _showError = ValueNotifier(false);
-  final ValueNotifier<String?> _urlValidationError = ValueNotifier(null);
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FocusNode _urlFocusNode = FocusNode();
 
   @override
@@ -30,13 +30,12 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     widget.controller.addListener(shortenerListener);
-    _urlController.addListener(_validateUrl);
 
     _listenable = Listenable.merge([
       widget.controller,
       _showSuccess,
       _showError,
-      _urlValidationError,
+      _urlController,
     ]);
   }
 
@@ -66,30 +65,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _validateUrl() {
-    final url = _urlController.text.trim();
-
-    if (url.isEmpty || url.length < 4) {
-      _urlValidationError.value = null;
-      return;
-    }
-
-    if (!widget.controller.isValidUrl(url)) {
-      _urlValidationError.value =
-          'Please enter a valid URL(https://example.com)';
-    } else {
-      _urlValidationError.value = null;
-    }
-  }
-
   @override
   void dispose() {
-    _urlController.removeListener(_validateUrl);
     _urlController.dispose();
     widget.controller.removeListener(shortenerListener);
     _showSuccess.dispose();
     _showError.dispose();
-    _urlValidationError.dispose();
     super.dispose();
   }
 
@@ -127,6 +108,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         // Icon
                         Container(
+                          key: const Key('header_icon'),
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
@@ -143,6 +125,7 @@ class _HomePageState extends State<HomePage> {
                         // Title
                         Text(
                           'URL Shortener',
+                          key: const Key('header_title'),
                           style: context.size18.copyWith(
                             fontWeight: FontWeight.w600,
                             color: colors.gray900,
@@ -152,6 +135,7 @@ class _HomePageState extends State<HomePage> {
                         // Subtitle
                         Text(
                           'Shorten your favorite links and keep track of them!',
+                          key: const Key('header_subtitle'),
                           textAlign: TextAlign.center,
                           style: context.size14.copyWith(
                             color: context.appColors.gray500,
@@ -177,148 +161,160 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _urlController,
-                            focusNode: _urlFocusNode,
-                            decoration: InputDecoration(
-                              hintText: 'Enter URL to shorten',
-                              hintStyle: context.size16.copyWith(
-                                color: context.appColors.gray400,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              prefixIcon: Icon(
-                                LucideIcons.link,
-                                color: _urlValidationError.value != null
-                                    ? context.appColors.red500
-                                    : context.appColors.gray400,
-                                size: 20,
-                              ),
-                              errorText: _urlValidationError.value,
-                              errorStyle: context.size12.copyWith(
-                                color: context.appColors.red500,
-                              ),
-                              filled: true,
-                              fillColor: context.appColors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: context.appColors.gray300,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              key: const Key('url_input_field'),
+                              controller: _urlController,
+                              focusNode: _urlFocusNode,
+                              validator: (value) {
+                                final url = value?.trim() ?? '';
+                                if (url.isEmpty) {
+                                  return 'Please enter a URL';
+                                }
+                                if (!widget.controller.isValidUrl(url)) {
+                                  return 'Please enter a valid URL(https://example.com)';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Enter URL to shorten',
+                                hintStyle: context.size16.copyWith(
+                                  color: context.appColors.gray400,
+                                  fontWeight: FontWeight.w400,
                                 ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: _urlValidationError.value != null
-                                      ? context.appColors.red500
-                                      : context.appColors.gray300,
+                                prefixIcon: Icon(
+                                  LucideIcons.link,
+                                  color: context.appColors.gray400,
+                                  size: 20,
                                 ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: _urlValidationError.value != null
-                                      ? context.appColors.red500
-                                      : context.appColors.purple600,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
+                                errorStyle: context.size12.copyWith(
                                   color: context.appColors.red500,
                                 ),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: context.appColors.red500,
-                                  width: 2,
+                                filled: true,
+                                fillColor: context.appColors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: context.appColors.gray300,
+                                  ),
                                 ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Shorten Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed:
-                                  (_urlController.text.trim().isEmpty ||
-                                      _urlController.text.length < 4 ||
-                                      _urlValidationError.value != null)
-                                  ? null
-                                  : () {
-                                      final url = _urlController.text.trim();
-                                      widget.controller.shortUrl(url);
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: context.appColors.purple600,
-                                foregroundColor: context.appColors.white,
-                                padding: const EdgeInsets.symmetric(
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: context.appColors.gray300,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: context.appColors.purple600,
+                                    width: 2,
+                                  ),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: context.appColors.red500,
+                                  ),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: context.appColors.red500,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
                                   vertical: 16,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
                               ),
-                              child: state is ShortenerStateLoading
-                                  ? SizedBox(
-                                      width: 23,
-                                      height: 23,
-                                      child: CircularProgressIndicator(
-                                        color: context.appColors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Text(
-                                      'Shorten URL',
-                                      style: context.size16.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
                             ),
-                          ),
-
-                          if (_showSuccess.value) ...[
                             const SizedBox(height: 16),
-                            FeedbackMessageWidget(
-                              type: FeedbackType.success,
-                              message: 'Link shortened successfully!',
-                              onClose: () {
-                                setState(() {
-                                  _showSuccess.value = false;
-                                });
-                              },
-                            ),
-                          ],
 
-                          if (_showError.value) ...[
-                            const SizedBox(height: 16),
-                            FeedbackMessageWidget(
-                              type: FeedbackType.error,
-                              message:
-                                  state.exception?.message ?? 'Failed to fetch',
-                              onClose: () {
-                                setState(() {
-                                  _showError.value = false;
-                                });
-                              },
+                            // Shorten Button
+                            SizedBox(
+                              key: const Key('shorten_button_container'),
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                key: const Key('shorten_button'),
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    final url = _urlController.text.trim();
+                                    if (url.isNotEmpty && url.length >= 4) {
+                                      widget.controller.shortUrl(url);
+                                    }
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: context.appColors.purple600,
+                                  foregroundColor: context.appColors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: state is ShortenerStateLoading
+                                    ? SizedBox(
+                                        width: 23,
+                                        height: 23,
+                                        child: CircularProgressIndicator(
+                                          color: context.appColors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Shorten URL',
+                                        style: context.size16.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
                             ),
+
+                            if (_showSuccess.value) ...[
+                              const SizedBox(height: 16),
+                              FeedbackMessageWidget(
+                                key: const Key('success_feedback'),
+                                type: FeedbackType.success,
+                                message: 'Link shortened successfully!',
+                                onClose: () {
+                                  setState(() {
+                                    _showSuccess.value = false;
+                                  });
+                                },
+                              ),
+                            ],
+
+                            if (_showError.value) ...[
+                              const SizedBox(height: 16),
+                              FeedbackMessageWidget(
+                                key: const Key('error_feedback'),
+                                type: FeedbackType.error,
+                                message:
+                                    state.exception?.message ??
+                                    'Failed to fetch',
+                                onClose: () {
+                                  setState(() {
+                                    _showError.value = false;
+                                  });
+                                },
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 32),
 
                     Container(
+                      key: const Key('history_section'),
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -339,6 +335,7 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Text(
                             'Recent Links (${state.history.length})',
+                            key: const Key('history_title'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
