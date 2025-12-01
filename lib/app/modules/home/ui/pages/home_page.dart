@@ -84,29 +84,25 @@ class _HomePageState extends State<HomePage> {
         listenable: _listenable,
         builder: (context, child) {
           final state = widget.controller.value;
-          return SafeArea(
-            child: SingleChildScrollView(
-              child: Container(
-                constraints: BoxConstraints(
-                  minHeight: context.screenSize.height,
+          return SingleChildScrollView(
+            child: Container(
+              constraints: BoxConstraints(minHeight: context.screenSize.height),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomRight,
+                  colors: [colors.white, colors.purple50],
                 ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomRight,
-                    colors: [colors.white, colors.purple50],
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 24.0,
-                ),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 24.0,
+              ),
+              child: SafeArea(
                 child: Column(
                   children: [
-                    // Header Section
                     Column(
                       children: [
-                        // Icon
                         Container(
                           key: const Key('header_icon'),
                           width: 80,
@@ -122,7 +118,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Title
+
                         Text(
                           'URL Shortener',
                           key: const Key('header_title'),
@@ -132,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Subtitle
+
                         Text(
                           'Shorten your favorite links and keep track of them!',
                           key: const Key('header_subtitle'),
@@ -145,7 +141,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Input Card
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -235,7 +230,6 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Shorten Button
                             SizedBox(
                               key: const Key('shorten_button_container'),
                               width: double.infinity,
