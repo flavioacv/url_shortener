@@ -48,7 +48,7 @@ lib/
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/flavioacv/url_shortener.git
+    git clone https://github.com/.../url_shortener.git
     cd url_shortener
     ```
 

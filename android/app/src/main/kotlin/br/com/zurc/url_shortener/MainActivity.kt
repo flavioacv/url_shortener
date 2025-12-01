@@ -1,4 +1,4 @@
-package br.com.zurc.url_shortener
+package br.com.zurc.urlshortener
 
 import io.flutter.embedding.android.FlutterActivity
 
