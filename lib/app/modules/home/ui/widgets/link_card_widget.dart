@@ -21,7 +21,7 @@ class LinkCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.appColors.gray50,
+        color: context.appColors.gray50.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.appColors.gray200),
       ),
@@ -47,13 +47,20 @@ class LinkCardWidget extends StatelessWidget {
               Expanded(
                 child: Text(
                   originalUrl,
-                  style: TextStyle(fontSize: 14, color: context.appColors.gray600),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: context.appColors.gray600,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(LucideIcons.externalLink, size: 16, color: context.appColors.gray400),
+              Icon(
+                LucideIcons.externalLink,
+                size: 16,
+                color: context.appColors.gray400,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -122,7 +129,10 @@ class LinkCardWidget extends StatelessWidget {
               ),
               Text(
                 alias,
-                style: TextStyle(fontSize: 12, color: context.appColors.gray600),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.appColors.gray600,
+                ),
               ),
             ],
           ),

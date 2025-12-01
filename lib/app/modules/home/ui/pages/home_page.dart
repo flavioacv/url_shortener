@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   final ValueNotifier<bool> _showSuccess = ValueNotifier(false);
   final ValueNotifier<bool> _showError = ValueNotifier(false);
   final ValueNotifier<String?> _urlValidationError = ValueNotifier(null);
+  final FocusNode _urlFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -53,6 +54,8 @@ class _HomePageState extends State<HomePage> {
     }
     if (shortenerState is ShortenerStateSuccess) {
       _showSuccess.value = true;
+      _urlController.clear();
+      _urlFocusNode.unfocus();
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
@@ -176,9 +179,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: Column(
                         children: [
-                          // URL Input Field
                           TextField(
                             controller: _urlController,
+                            focusNode: _urlFocusNode,
                             decoration: InputDecoration(
                               hintText: 'Enter URL to shorten',
                               hintStyle: context.size16.copyWith(
@@ -253,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                                   ? null
                                   : () {
                                       final url = _urlController.text.trim();
-                                      widget.controller.shortUrlTest(url);
+                                      widget.controller.shortUrl(url);
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: context.appColors.purple600,
